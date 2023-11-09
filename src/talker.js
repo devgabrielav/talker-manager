@@ -1,6 +1,10 @@
 const { Router } = require('express');
 const fs = require('fs').promises;
 const { join } = require('path');
+const { validateToken, validatePropertiesBody, 
+  validatePropertiesTalk, validateName, 
+  validateAge, validateWatchedAt,
+  validateRate, validateTokenType } = require('./middlewaresTalker');
 
 const talkerRoutes = Router();
 
@@ -33,5 +37,25 @@ talkerRoutes.get('/:id', async (req, res) => {
   }
   return res.status(404).json({ message: 'Pessoa palestrante não encontrada' });
 });
+
+talkerRoutes.post('/', validateToken, validateTokenType, validatePropertiesBody, 
+  validatePropertiesTalk, validateName, validateAge, 
+  validateWatchedAt, validateRate, async (req, res) => {
+    const { name, age, talk } = req.body;
+    const allTalkers = await readAll();
+    const lastIndex = allTalkers.length - 1;
+    const lastId = allTalkers[lastIndex];
+    const data = JSON.stringify([
+      ...allTalkers,
+      {
+        id: lastId.id + 1,
+        name,
+        age,
+        talk,
+      },
+    ]);
+    fs.writeFile(join(__dirname, path), data);
+    return res.status(201).json({ id: lastId.id + 1, name, age, talk });
+  });
 
 module.exports = talkerRoutes;

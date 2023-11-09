@@ -1,6 +1,6 @@
 const { Router } = require('express');
 const crypto = require('crypto');
-const { validatePropertiesLogin, validateNotEmpty, validateLogin } = require('./middlewares');
+const { validatePropertiesLogin, validateNotEmpty, validateLogin } = require('./middlewaresLogin');
 
 const loginRoutes = Router();
 
