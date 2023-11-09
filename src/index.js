@@ -1,4 +1,5 @@
 const express = require('express');
+const talkerRoutes = require('./talker');
 
 const app = express();
 app.use(express.json());
@@ -15,4 +16,4 @@ app.listen(PORT, () => {
   console.log('Online');
 });
 
-// iniciando
+app.use('/talker', talkerRoutes);
