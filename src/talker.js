@@ -26,6 +26,21 @@ talkerRoutes.get('/', async (req, res) => {
   return res.status(200).json(allTalkers);
 });
 
+talkerRoutes.get('/search', validateToken, validateTokenType, async (req, res) => {
+  const { q } = req.query;
+  const allTalkers = await readAll();
+  const filteredTalkers = await allTalkers
+    .filter((talker) => talker.name.toLowerCase().includes(q.toLowerCase()));
+
+  if (filteredTalkers.length === 0) {
+    return res.status(200).json([]);
+  }
+  if (!q || q.trim().length === 0) {
+    return res.status(200).json(allTalkers);
+  }
+  return res.status(200).json(filteredTalkers);
+});
+
 talkerRoutes.get('/:id', async (req, res) => {
   const { id } = req.params;
   const allTalkers = await readAll();
