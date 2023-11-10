@@ -82,6 +82,28 @@ const validateWatchedAt = (req, res, next) => {
   );
 };
 
+const validationRatePatch = (rate) => {
+  const rateType = typeof Number(rate) === 'number' && Number
+    .isInteger(Number(rate)) && Number(rate) >= 1 && Number(rate) <= 5;
+  if (!rateType) {
+    return 'O campo "rate" deve ser um número inteiro entre 1 e 5';
+  }
+  return true;
+};
+
+const validateRatePatch = (req, res, next) => {
+  const { rate } = req.body;
+  const result = validationRatePatch(rate);
+  
+  if (rate && result === true) {
+    return next();
+  }
+  if (rate === undefined) {
+    return res.status(400).json({ message: 'O campo "rate" é obrigatório' });
+  }
+  return res.status(400).json({ message: result });
+};
+
 const validateRate = (req, res, next) => {
   const { rate } = req.body.talk;
 
@@ -151,4 +173,5 @@ module.exports = {
   validateRate,
   validateRateSearch,
   validateWatchedSearch,
+  validateRatePatch,
 };

@@ -5,7 +5,8 @@ const { validateToken, validatePropertiesBody,
   validatePropertiesTalk, validateName, 
   validateAge, validateWatchedAt,
   validateRate, validateTokenType, 
-  validateRateSearch, validateWatchedSearch } = require('./middlewaresTalker');
+  validateRateSearch, validateWatchedSearch,
+  validateRatePatch } = require('./middlewaresTalker');
 
 const talkerRoutes = Router();
 
@@ -51,6 +52,21 @@ talkerRoutes.get('/search', validateToken, validateTokenType, validateRateSearch
     return res.status(200).json(data);
   });
 
+talkerRoutes.patch('/rate/:id', validateToken, validateTokenType, validateRatePatch,
+  async (req, res) => {
+    const { id } = req.params;
+    const { rate } = req.body;
+    const allTalkers = await readAll();
+    const correctTalker = allTalkers.find((talker) => talker.id === Number(id));
+
+    if (!correctTalker) {
+      return res.status(404).json({ message: 'Pessoa palestrante não encontrada' });
+    } 
+    correctTalker.talk.rate = rate;
+    fs.writeFile(join(__dirname, path), JSON.stringify(allTalkers), 'utf8');
+    return res.status(204).end();
+  });
+
 talkerRoutes.get('/:id', async (req, res) => {
   const { id } = req.params;
   const allTalkers = await readAll();
@@ -79,7 +95,7 @@ talkerRoutes.post('/', validateToken, validateTokenType, validatePropertiesBody,
         talk,
       },
     ]);
-    fs.writeFile(join(__dirname, path), data);
+    fs.writeFile(join(__dirname, path), data, 'utf8');
     return res.status(201).json({ id: lastId.id + 1, name, age, talk });
   });
 
@@ -96,7 +112,7 @@ talkerRoutes.put('/:id', validateToken, validateTokenType, validatePropertiesBod
     const { name, age, talk } = req.body;
     const index = allTalkers.indexOf(correctTalker);
     allTalkers[index] = { ...allTalkers[index], name, age, talk };
-    fs.writeFile(join(__dirname, path), JSON.stringify(allTalkers));
+    fs.writeFile(join(__dirname, path), JSON.stringify(allTalkers), 'utf8');
     return res.status(200).json(allTalkers[index]);
   });
 
@@ -109,7 +125,7 @@ talkerRoutes.delete('/:id', validateToken, validateTokenType, async (req, res) =
     return res.status(404).json({ message: 'Pessoa palestrante não encontrada' });
   }
   allTalkers.splice(correctTalker, 1);
-  fs.writeFile(join(__dirname, path), JSON.stringify(allTalkers));
+  fs.writeFile(join(__dirname, path), JSON.stringify(allTalkers), 'utf8');
 
   res.status(204).end();
 });
