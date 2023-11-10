@@ -4,7 +4,8 @@ const { join } = require('path');
 const { validateToken, validatePropertiesBody, 
   validatePropertiesTalk, validateName, 
   validateAge, validateWatchedAt,
-  validateRate, validateTokenType } = require('./middlewaresTalker');
+  validateRate, validateTokenType, 
+  validateRateSearch } = require('./middlewaresTalker');
 
 const talkerRoutes = Router();
 
@@ -17,6 +18,52 @@ async function readAll() {
   return parsed;
 }
 
+const getSearchBasedOnQ = async (q) => {
+  const allTalkers = await readAll();
+  const filteredTalkersName = await allTalkers.filter((talker) => talker.name.toLowerCase()
+    .includes(q.toLowerCase()));
+
+  if (filteredTalkersName.length === 0) {
+    return [];
+  }
+  if (!q || q.trim().length === 0) {
+    return allTalkers;
+  }
+  return filteredTalkersName;
+};
+
+const getSearchBasedOnRate = async (rate) => {
+  const allTalkers = await readAll();
+  const filteredTalkersRate = await allTalkers
+    .filter((talker) => talker.talk.rate === rate);
+
+  if (filteredTalkersRate.length === 0) {
+    return [];
+  }
+
+  if (!rate) {
+    return allTalkers;
+  }
+
+  return filteredTalkersRate;
+};
+
+const getBothSearches = async (q, rate) => {
+  const allTalkers = await readAll();
+  const filteredTalkersNameAndRate = await allTalkers
+    .filter((talker) => talker.name.toLowerCase()
+      .includes(q.toLowerCase()) && talker.talk.rate === rate);
+
+  if (!rate && !q) {
+    return allTalkers;
+  }
+  if (filteredTalkersNameAndRate.length === 0) {
+    return [];
+  }
+  
+  return filteredTalkersNameAndRate;
+};
+
 talkerRoutes.get('/', async (req, res) => {
   const allTalkers = await readAll();
 
@@ -26,20 +73,20 @@ talkerRoutes.get('/', async (req, res) => {
   return res.status(200).json(allTalkers);
 });
 
-talkerRoutes.get('/search', validateToken, validateTokenType, async (req, res) => {
-  const { q } = req.query;
-  const allTalkers = await readAll();
-  const filteredTalkers = await allTalkers
-    .filter((talker) => talker.name.toLowerCase().includes(q.toLowerCase()));
-
-  if (filteredTalkers.length === 0) {
-    return res.status(200).json([]);
-  }
-  if (!q || q.trim().length === 0) {
-    return res.status(200).json(allTalkers);
-  }
-  return res.status(200).json(filteredTalkers);
-});
+talkerRoutes.get('/search', validateToken, validateTokenType, validateRateSearch, 
+  async (req, res) => {
+    const { q, rate } = req.query;
+    if (q && !rate) {
+      const data = await getSearchBasedOnQ(q);
+      return res.status(200).json(data);
+    }
+    if (!q && rate) {
+      const data = await getSearchBasedOnRate(Number(rate));
+      return res.status(200).json(data);
+    }
+    const data = await getBothSearches(q, Number(rate));
+    return res.status(200).json(data);
+  });
 
 talkerRoutes.get('/:id', async (req, res) => {
   const { id } = req.params;
@@ -104,4 +151,7 @@ talkerRoutes.delete('/:id', validateToken, validateTokenType, async (req, res) =
   res.status(204).end();
 });
 
-module.exports = talkerRoutes;
+module.exports = {
+  talkerRoutes,
+  readAll,
+};

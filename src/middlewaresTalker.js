@@ -85,7 +85,8 @@ const validateWatchedAt = (req, res, next) => {
 const validateRate = (req, res, next) => {
   const { rate } = req.body.talk;
 
-  const rateType = typeof rate === 'number' && Number.isInteger(rate) && rate >= 1 && rate <= 5;
+  const rateType = typeof Number(rate) === 'number' && Number
+    .isInteger(Number(rate)) && Number(rate) >= 1 && Number(rate) <= 5;
 
   if (rateType) {
     return next();
@@ -93,6 +94,30 @@ const validateRate = (req, res, next) => {
   return res.status(400).json(
     { message: 'O campo "rate" deve ser um número inteiro entre 1 e 5' },
   );
+};
+
+const validationRate = (rate) => {
+  const changeType = Number(rate);
+  if (typeof changeType !== 'number') {
+    return 'O campo "rate" deve ser um número inteiro entre 1 e 5';
+  }
+  
+  if (Number(rate) > 5 || Number(rate) < 1 || !Number.isInteger(Number(rate))) {
+    return 'O campo "rate" deve ser um número inteiro entre 1 e 5';
+  }
+
+  return false;
+};
+
+const validateRateSearch = (req, res, next) => {
+  const { rate } = req.query;
+  const result = validationRate(rate);
+
+  if (rate && result !== false) {
+    return res.status(400)
+      .json({ message: result });
+  }
+  return next();
 };
 
 module.exports = {
@@ -104,4 +129,5 @@ module.exports = {
   validateAge,
   validateWatchedAt,
   validateRate,
+  validateRateSearch,
 };

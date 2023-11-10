@@ -1,5 +1,5 @@
 const express = require('express');
-const talkerRoutes = require('./talker');
+const { talkerRoutes } = require('./talker');
 const loginRoutes = require('./login');
 
 const app = express();
