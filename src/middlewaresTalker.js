@@ -109,13 +109,33 @@ const validationRate = (rate) => {
   return false;
 };
 
+const validationDate = (date) => {
+  const dateType = /^([0-2][0-9]|(3)[0-1])(\/)(((0)[0-9])|((1)[0-2]))(\/)\d{4}$/i;
+
+  const validateDate = dateType.test(date);
+
+  if (!validateDate) {
+    return 'O parâmetro "date" deve ter o formato "dd/mm/aaaa"';
+  }
+  return false;
+};
+
 const validateRateSearch = (req, res, next) => {
   const { rate } = req.query;
   const result = validationRate(rate);
 
   if (rate && result !== false) {
-    return res.status(400)
-      .json({ message: result });
+    return res.status(400).json({ message: result });
+  }
+  return next();
+};
+
+const validateWatchedSearch = (req, res, next) => {
+  const { date } = req.query;
+  const result = validationDate(date);
+
+  if (date && result !== false) {
+    return res.status(400).json({ message: result });
   }
   return next();
 };
@@ -130,4 +150,5 @@ module.exports = {
   validateWatchedAt,
   validateRate,
   validateRateSearch,
+  validateWatchedSearch,
 };

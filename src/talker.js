@@ -5,7 +5,7 @@ const { validateToken, validatePropertiesBody,
   validatePropertiesTalk, validateName, 
   validateAge, validateWatchedAt,
   validateRate, validateTokenType, 
-  validateRateSearch } = require('./middlewaresTalker');
+  validateRateSearch, validateWatchedSearch } = require('./middlewaresTalker');
 
 const talkerRoutes = Router();
 
@@ -18,51 +18,14 @@ async function readAll() {
   return parsed;
 }
 
-const getSearchBasedOnQ = async (q) => {
+const getSearchAll = async (q, rate, date) => {
   const allTalkers = await readAll();
-  const filteredTalkersName = await allTalkers.filter((talker) => talker.name.toLowerCase()
-    .includes(q.toLowerCase()));
-
-  if (filteredTalkersName.length === 0) {
-    return [];
-  }
-  if (!q || q.trim().length === 0) {
-    return allTalkers;
-  }
-  return filteredTalkersName;
-};
-
-const getSearchBasedOnRate = async (rate) => {
-  const allTalkers = await readAll();
-  const filteredTalkersRate = await allTalkers
-    .filter((talker) => talker.talk.rate === rate);
-
-  if (filteredTalkersRate.length === 0) {
-    return [];
-  }
-
-  if (!rate) {
-    return allTalkers;
-  }
-
-  return filteredTalkersRate;
-};
-
-const getBothSearches = async (q, rate) => {
-  const allTalkers = await readAll();
-  const filteredTalkersNameAndRate = await allTalkers
-    .filter((talker) => talker.name.toLowerCase()
-      .includes(q.toLowerCase()) && talker.talk.rate === rate);
-
-  if (!rate && !q) {
-    return allTalkers;
-  }
-  if (filteredTalkersNameAndRate.length === 0) {
-    return [];
-  }
-  
-  return filteredTalkersNameAndRate;
-};
+  const filteredTalkers = await allTalkers
+    .filter((talker) => (q ? talker.name.toLowerCase().includes(q.toLowerCase()) : true))
+    .filter((talker) => (rate ? talker.talk.rate === Number(rate) : true))
+    .filter((talker) => (date ? talker.talk.watchedAt === date : true));
+  return filteredTalkers;
+}; 
 
 talkerRoutes.get('/', async (req, res) => {
   const allTalkers = await readAll();
@@ -74,17 +37,17 @@ talkerRoutes.get('/', async (req, res) => {
 });
 
 talkerRoutes.get('/search', validateToken, validateTokenType, validateRateSearch, 
-  async (req, res) => {
-    const { q, rate } = req.query;
-    if (q && !rate) {
-      const data = await getSearchBasedOnQ(q);
-      return res.status(200).json(data);
+  validateWatchedSearch, async (req, res) => {
+    const { q, rate, date } = req.query;
+    const allTalkers = await readAll();
+    const data = await getSearchAll(q, rate, date);
+
+    if (data.length === 0) {
+      return res.status(200).json([]);
     }
-    if (!q && rate) {
-      const data = await getSearchBasedOnRate(Number(rate));
-      return res.status(200).json(data);
+    if (!q && !rate && !date) {
+      return res.status(200).json(allTalkers);
     }
-    const data = await getBothSearches(q, Number(rate));
     return res.status(200).json(data);
   });
 
