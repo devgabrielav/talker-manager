@@ -58,4 +58,21 @@ talkerRoutes.post('/', validateToken, validateTokenType, validatePropertiesBody,
     return res.status(201).json({ id: lastId.id + 1, name, age, talk });
   });
 
+talkerRoutes.put('/:id', validateToken, validateTokenType, validatePropertiesBody, 
+  validatePropertiesTalk, validateName, validateAge, 
+  validateWatchedAt, validateRate, async (req, res) => {
+    const { id } = req.params;
+    const allTalkers = await readAll();
+    const correctTalker = allTalkers.find((talker) => talker.id === Number(id));
+
+    if (!correctTalker) {
+      return res.status(404).json({ message: 'Pessoa palestrante não encontrada' });
+    } 
+    const { name, age, talk } = req.body;
+    const index = allTalkers.indexOf(correctTalker);
+    allTalkers[index] = { ...allTalkers[index], name, age, talk };
+    fs.writeFile(join(__dirname, path), JSON.stringify(allTalkers));
+    return res.status(200).json(allTalkers[index]);
+  });
+
 module.exports = talkerRoutes;
