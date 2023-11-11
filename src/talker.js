@@ -1,6 +1,7 @@
 const { Router } = require('express');
 const fs = require('fs').promises;
 const { join } = require('path');
+const { getAllTalkers } = require('./db/talkerDb');
 const { validateToken, validatePropertiesBody, 
   validatePropertiesTalk, validateName, 
   validateAge, validateWatchedAt,
@@ -19,6 +20,11 @@ async function readAll() {
   return parsed;
 }
 
+async function readAllDb() {
+  const allTalkers = await getAllTalkers();
+  return allTalkers;
+}
+
 const getSearchAll = async (q, rate, date) => {
   const allTalkers = await readAll();
   const filteredTalkers = await allTalkers
@@ -30,11 +36,19 @@ const getSearchAll = async (q, rate, date) => {
 
 talkerRoutes.get('/', async (req, res) => {
   const allTalkers = await readAll();
-
   if (!allTalkers) {
     return res.status(200).json([]);
   }
   return res.status(200).json(allTalkers);
+});
+
+talkerRoutes.get('/db', async (req, res) => {
+  const allDbTalkers = await readAllDb();
+
+  if (allDbTalkers.length === 0) {
+    return res.status(200).json([]);
+  }
+  return res.status(200).json(allDbTalkers);
 });
 
 talkerRoutes.get('/search', validateToken, validateTokenType, validateRateSearch, 

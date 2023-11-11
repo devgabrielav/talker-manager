@@ -1,12 +1,8 @@
 const { Router } = require('express');
-const crypto = require('crypto');
 const { validatePropertiesLogin, validateNotEmpty, validateLogin } = require('./middlewaresLogin');
+const { generateToken } = require('./helpers/helpers');
 
 const loginRoutes = Router();
-
-function generateToken() {
-  return crypto.randomBytes(8).toString('hex');
-}
 
 loginRoutes.post('/', validatePropertiesLogin, validateNotEmpty, validateLogin, (req, res) => {
   const token = generateToken();
