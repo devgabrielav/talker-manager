@@ -8,7 +8,6 @@ COPY package*.json ./
 RUN npm install
 
 # Copia testes do avaliador e arquivos do projeto
-COPY __tests__ ./__tests__
 COPY .eslint* seed.sql jest.config.js ./
 
 # Usuário linux padrão do container, não é recomendado usar root
